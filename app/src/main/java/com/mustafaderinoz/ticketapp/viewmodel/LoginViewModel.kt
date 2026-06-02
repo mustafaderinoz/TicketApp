@@ -28,7 +28,7 @@ class LoginViewModel(
 
     fun onEmailChange(value: String) = _state.update { it.copy(email = value, errorMessage = null) }
     fun onPasswordChange(value: String) = _state.update { it.copy(password = value, errorMessage = null) }
-    fun consumeError() = _state.update { it.copy(errorMessage = null) }
+    //fun consumeError() = _state.update { it.copy(errorMessage = null) }
 
     fun submit() {
         val current = _state.value

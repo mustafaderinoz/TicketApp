@@ -1,4 +1,5 @@
 package com.mustafaderinoz.ticketapp.viewmodel
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mustafaderinoz.core.domain.auth.AuthRepository
@@ -18,10 +19,16 @@ data class RegisterUiState(
     val errorMessage: String? = null,
     val isRegistered: Boolean = false
 ) {
+    // Email regex kontrolü
+    private val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[a-zA-Z]{2,}\$".toRegex()
+
+    val isEmailValid: Boolean get() = email.matches(emailRegex)
+    val isPasswordValid: Boolean get() = password.length in 8..128
     val passwordsMatch: Boolean get() = password == confirmPassword
+
     val canSubmit: Boolean get() =
-        email.isNotBlank() &&
-                password.length >= 8 &&
+        isEmailValid &&
+                isPasswordValid &&
                 passwordsMatch &&
                 !isLoading
 }
@@ -42,7 +49,7 @@ class RegisterViewModel(
     fun onConfirmPasswordChange(value: String) =
         _state.update { it.copy(confirmPassword = value, errorMessage = null) }
 
-    fun consumeError() = _state.update { it.copy(errorMessage = null) }
+   // fun consumeError() = _state.update { it.copy(errorMessage = null) }
 
     fun submit() {
         val current = _state.value
@@ -67,7 +74,7 @@ class RegisterViewModel(
 internal fun Throwable.toRegisterMessage(): String = when (this) {
     is ApiException -> when (code) {
         400 -> "Geçersiz email veya şifre formatı"
-        409 -> "Bu email adresi zaten kullanımda"
+        409 -> "Bu email zaten kayıtlı" // Güncellendi
         in 500..599 -> "Sunucu şu anda cevap veremiyor"
         else -> "Beklenmeyen bir hata oluştu"
     }

@@ -16,6 +16,8 @@ class EventRepositoryImpl(
     private val eventApi: EventApi
 ) : EventRepository {
     override suspend fun getEvents(): Result<List<Event>> = runCatchingApi { eventApi.getEvents() }.map { list -> list.map { it.toDomain() }}
+    override suspend fun getEvent(id: String): Result<Event> =
+        runCatchingApi { eventApi.getEvent(id) }.map { it.toDomain() }
 }
 
 // apiden isteği çağır gelen elemanları domain nesnesine maple böylelikle geriye event listesi dönecek

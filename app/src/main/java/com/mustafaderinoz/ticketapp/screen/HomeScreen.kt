@@ -38,6 +38,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun HomeScreen(
     onNavigateToTicketDetail: (String) -> Unit = {},
+    onNavigateToEventDetail: (String) -> Unit = {},
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -57,7 +58,8 @@ fun HomeScreen(
             EventsRow(
                 isLoading = state.isEventsLoading,
                 error = state.eventsError,
-                events = state.events
+                events = state.events,
+                onEventClick = onNavigateToEventDetail
             )
 
             Spacer(Modifier.height(32.dp))
@@ -142,7 +144,8 @@ private fun StatusPill(text: String, isPositive: Boolean) {
 private fun EventsRow(
     isLoading: Boolean,
     error: String?,
-    events: List<Event>
+    events: List<Event>,
+    onEventClick: (String) -> Unit
 ) {
     when {
         isLoading -> {
@@ -171,7 +174,7 @@ private fun EventsRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(items = events, key = { it.id }) { event ->
-                    EventCard(event)
+                    EventCard(event = event, onClick = { onEventClick(event.id) })
                 }
             }
         }
@@ -180,12 +183,13 @@ private fun EventsRow(
 // Tek bir etkinliğin adı, konumu, tarihi ve fiyatı gibi detaylarını gösteren kart tasarımı.
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun EventCard(event: Event) {
+private fun EventCard(event: Event,onClick: () -> Unit) {
     val initial = event.name.firstOrNull { it.isLetter() }?.uppercaseChar() ?: '?'
     val remaining = TicketUtils.totalRemaining(event.ticketTypes)
     val isAvailable = remaining > 0
 
     Card(
+        onClick = onClick,
         modifier = Modifier.width(300.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

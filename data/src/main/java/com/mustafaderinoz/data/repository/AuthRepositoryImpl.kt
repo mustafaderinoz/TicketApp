@@ -42,7 +42,7 @@ class AuthRepositoryImpl(
     ): Result<AuthSession> = runCatchingApi {
         authApi.register(CredentialsDto(email = email, password = password))
     }.onSuccess {
-
+        tokenStore.save(it.accessToken, it.refreshToken)
     }.map { i ->
         AuthSession(
             user = User(i.user.id, i.user.email, UserRole.fromApi(i.user.role)),

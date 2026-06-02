@@ -60,8 +60,14 @@ fun RegisterScreen(
                 label = { Text("Email") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                isError = state.email.isNotEmpty() && !state.isEmailValid,
+                // supportingText sadece hata varsa gösterilecek, yoksa null dönüp yer tutmayacak
+                supportingText = if (state.email.isNotEmpty() && !state.isEmailValid) {
+                    { Text("Geçerli bir email adresi girin", color = MaterialTheme.colorScheme.error) }
+                } else null,
                 modifier = Modifier.fillMaxWidth(),
             )
+
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
@@ -71,8 +77,13 @@ fun RegisterScreen(
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError = state.password.isNotEmpty() && !state.isPasswordValid,
+                supportingText = if (state.password.isNotEmpty() && !state.isPasswordValid) {
+                    { Text("Şifre en az 8 karakter olmalıdır", color = MaterialTheme.colorScheme.error) }
+                } else null,
                 modifier = Modifier.fillMaxWidth(),
             )
+
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
@@ -83,14 +94,9 @@ fun RegisterScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 isError = state.confirmPassword.isNotEmpty() && !state.passwordsMatch,
-                supportingText = {
-                    if (state.confirmPassword.isNotEmpty() && !state.passwordsMatch) {
-                        Text(
-                            text = "Şifreler eşleşmiyor",
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                },
+                supportingText = if (state.confirmPassword.isNotEmpty() && !state.passwordsMatch) {
+                    { Text("Şifreler eşleşmiyor", color = MaterialTheme.colorScheme.error) }
+                } else null,
                 modifier = Modifier.fillMaxWidth(),
             )
 

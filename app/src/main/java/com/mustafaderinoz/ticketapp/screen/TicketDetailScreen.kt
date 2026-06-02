@@ -13,7 +13,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,7 +44,6 @@ fun TicketDetailScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val ticket = state.ticket
 
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -67,21 +68,89 @@ fun TicketDetailScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        if (ticket == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.Center
+        ) {
+            when {
+                // 1. Loading State
+                state.isLoading -> {
+                    CircularProgressIndicator()
+                }
+
+                // 2. Error State
+                state.error != null -> {
+                    ErrorStateContent(
+                        errorMessage = state.error!!,
+                        onRetry = { viewModel.loadTicketDetail() }
+                    )
+                }
+
+                // 3. Content State
+                ticket != null -> {
+                    TicketDetailContent(
+                        ticket = ticket,
+
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
+                }
+
+                // 4. Empty State
+                else -> {
+                    EmptyStateContent()
+                }
             }
-        } else {
-            TicketDetailContent(
-                ticket = ticket,
-                modifier = Modifier.padding(innerPadding)
-            )
         }
+    }
+}
+
+@Composable
+private fun ErrorStateContent(errorMessage: String, onRetry: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(32.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Warning,
+            contentDescription = "Hata",
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(64.dp)
+        )
+        Text(
+            text = errorMessage,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center
+        )
+        Button(onClick = onRetry) {
+            Text("Tekrar Dene")
+        }
+    }
+}
+
+@Composable
+private fun EmptyStateContent() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(32.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Info,
+            contentDescription = "Bilgi",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(64.dp)
+        )
+        Text(
+            text = "Bu biletin detayları bulunamadı.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }
 

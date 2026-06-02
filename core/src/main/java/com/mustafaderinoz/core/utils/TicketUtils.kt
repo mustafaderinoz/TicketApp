@@ -17,4 +17,6 @@ object TicketUtils {
         val amount = priceCents / 100.0
         return if (amount == 0.0) "Ücretsiz" else "₺%.2f".format(amount)
     }
+    fun calculateTotal(ticketTypes: List<TicketType>, quantities: Map<String, Int>): Long =
+        ticketTypes.sumOf { tt -> tt.priceCents * (quantities[tt.id] ?: 0) }
 }

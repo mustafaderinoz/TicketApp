@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mustafaderinoz.core.domain.auth.AuthRepository
+import com.mustafaderinoz.ticketapp.screen.EventDetailScreen
 import com.mustafaderinoz.ticketapp.screen.HomeScreen
 import com.mustafaderinoz.ticketapp.screen.LoginScreen
 import com.mustafaderinoz.ticketapp.screen.RegisterScreen
@@ -58,11 +59,19 @@ private fun AuthedNavHost(navController: NavHostController) {
             HomeScreen(
                 onNavigateToTicketDetail = { ticketId ->
                     navController.navigate(TicketDetail(ticketId))
+                },
+                onNavigateToEventDetail = { eventId ->
+                    navController.navigate(EventDetail(eventId))
                 }
             )
         }
         composable<TicketDetail> {
             TicketDetailScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable<EventDetail> {
+            EventDetailScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

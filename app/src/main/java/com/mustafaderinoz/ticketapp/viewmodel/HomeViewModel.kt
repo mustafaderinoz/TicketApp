@@ -6,6 +6,8 @@ import com.mustafaderinoz.core.domain.event.Event
 import com.mustafaderinoz.core.domain.event.EventRepository
 import com.mustafaderinoz.core.domain.ticket.PurchasedTicketUi
 import com.mustafaderinoz.core.domain.ticket.TicketRepository
+import com.mustafaderinoz.data.network.ApiException
+import com.mustafaderinoz.data.network.NetworkException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,46 +48,70 @@ class HomeViewModel(
                 )
             }
 
+
             val eventsDeferred = async { eventRepository.getEvents() }
             val ticketsDeferred = async { ticketRepository.getPurchasedTickets() }
+
 
             val eventsResult = eventsDeferred.await()
             val ticketsResult = ticketsDeferred.await()
 
-            val events = eventsResult.getOrNull()
-            val eventsError = eventsResult.exceptionOrNull()?.message
-                ?: if (eventsResult.isFailure) "Etkinlikler yüklenemedi." else null
+            // State'e aktarılacak geçici değişkenler
+            var fetchedEvents: List<Event> = emptyList()
+            var newEventsError: String? = null
 
-            val tickets = ticketsResult.getOrNull()
-            val ticketsError = ticketsResult.exceptionOrNull()?.message
-                ?: if (ticketsResult.isFailure) "Biletler yüklenemedi." else null
+            var enrichedTickets: List<PurchasedTicketUi> = emptyList()
+            var newTicketsError: String? = null
 
-            val ticketTypeToEventMap = events
-                ?.flatMap { event -> event.ticketTypes.map { it.id to event } }
-                ?.toMap() ?: emptyMap()
+            // Etkinliklerin Sonucunu İşle
+            eventsResult
+                .onSuccess { fetchedEvents = it }
+                .onFailure { newEventsError = it.toHomeMessage() }
 
-            val ticketTypeMap = events
-                ?.flatMap { it.ticketTypes }
-                ?.associateBy { it.id } ?: emptyMap()
+            // Biletlerin Sonucunu İşle ve Zenginleştir (Enrich)
+            ticketsResult
+                .onSuccess { rawTickets ->
+                    // Etkinlikler başarıyla yüklendiyse (veya boşsa) map'leri oluştur
+                    val ticketTypeToEventMap = fetchedEvents
+                        .flatMap { event -> event.ticketTypes.map { it.id to event } }
+                        .toMap()
 
-            val enrichedTickets = tickets?.map { ticket ->
-                PurchasedTicketUi(
-                    ticket = ticket,
-                    event = ticketTypeToEventMap[ticket.ticketTypeId],
-                    ticketType = ticketTypeMap[ticket.ticketTypeId],
-                )
-            } ?: emptyList()
+                    val ticketTypeMap = fetchedEvents
+                        .flatMap { it.ticketTypes }
+                        .associateBy { it.id }
 
+                    //  UI modeline çevirme
+                    enrichedTickets = rawTickets.map { ticket ->
+                        PurchasedTicketUi(
+                            ticket = ticket,
+                            event = ticketTypeToEventMap[ticket.ticketTypeId],
+                            ticketType = ticketTypeMap[ticket.ticketTypeId],
+                        )
+                    }
+                }
+                .onFailure { newTicketsError = it.toHomeMessage() }
+
+            // Tek Seferde Tüm State'i Güncelle
             _state.update {
                 it.copy(
                     isEventsLoading = false,
-                    events = events ?: emptyList(),
-                    eventsError = eventsError,
+                    events = fetchedEvents,
+                    eventsError = newEventsError,
+
                     isTicketsLoading = false,
                     tickets = enrichedTickets,
-                    ticketsError = ticketsError
+                    ticketsError = newTicketsError
                 )
             }
         }
     }
+}
+
+internal fun Throwable.toHomeMessage(): String = when (this) {
+    is ApiException -> when (code) {
+        in 500..599 -> "Sunucu şu anda cevap veremiyor"
+        else -> "Beklenmeyen bir hata oluştu"
+    }
+    is NetworkException -> "İnternet bağlantısı yok"
+    else -> message ?: "Bilinmeyen bir hata oluştu."
 }

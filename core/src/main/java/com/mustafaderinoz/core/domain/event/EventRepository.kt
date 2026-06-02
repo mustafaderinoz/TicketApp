@@ -4,4 +4,5 @@ package com.mustafaderinoz.core.domain.event
 // data çünkü firebase istek atar yarın bir gün başka yerlerede atabilir.
 interface EventRepository {
     suspend fun getEvents(): Result<List<Event>>
+    suspend fun getEvent(id: String): Result<Event>
 }
