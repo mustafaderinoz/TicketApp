@@ -2,6 +2,7 @@ package com.mustafaderinoz.ticketapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mustafaderinoz.core.domain.auth.AuthRepository
 import com.mustafaderinoz.core.domain.event.Event
 import com.mustafaderinoz.core.domain.event.EventRepository
 import com.mustafaderinoz.core.domain.ticket.PurchasedTicketUi
@@ -28,6 +29,7 @@ data class HomeUiState(
 class HomeViewModel(
     private val eventRepository: EventRepository,
     private val ticketRepository: TicketRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeUiState())
@@ -103,6 +105,11 @@ class HomeViewModel(
                     ticketsError = newTicketsError
                 )
             }
+        }
+    }
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
         }
     }
 }
