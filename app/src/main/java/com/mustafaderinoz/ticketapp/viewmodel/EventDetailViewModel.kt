@@ -3,10 +3,11 @@ package com.mustafaderinoz.ticketapp.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mustafaderinoz.core.domain.error.AppError
 import com.mustafaderinoz.core.domain.event.Event
 import com.mustafaderinoz.core.domain.event.EventRepository
-import com.mustafaderinoz.data.network.ApiException
-import com.mustafaderinoz.data.network.NetworkException
+import com.mustafaderinoz.core.util.ErrorContext
+import com.mustafaderinoz.core.util.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,7 +70,8 @@ class EventDetailViewModel(
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
-                            error = error.toEventDetailMessage()
+                            error = (error as? AppError)?.toUserMessage(ErrorContext.EVENT_DETAIL)
+                                ?: AppError.Unknown(error.message).toUserMessage()
                         )
                     }
                 }
@@ -91,13 +93,4 @@ class EventDetailViewModel(
         _state.update { it.copy(quantities = it.quantities + (ticketTypeId to current - 1)) }
     }
 
-    internal fun Throwable.toEventDetailMessage(): String = when (this) {
-        is ApiException -> when (code) {
-            404 -> "Etkinlik bulunamadı"
-            in 500..599 -> "Sunucu şu anda cevap veremiyor"
-            else -> "Beklenmeyen bir hata oluştu"
-        }
-        is NetworkException -> "İnternet bağlantısı yok"
-        else -> message ?: "Bilinmeyen bir hata oluştu."
-    }
 }

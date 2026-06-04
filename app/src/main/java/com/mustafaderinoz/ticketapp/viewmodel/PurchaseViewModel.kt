@@ -2,12 +2,13 @@ package com.mustafaderinoz.ticketapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mustafaderinoz.core.domain.error.AppError
 import com.mustafaderinoz.core.domain.event.TicketType
 import com.mustafaderinoz.core.domain.purchase.CreatePurchaseItem
 import com.mustafaderinoz.core.domain.purchase.Purchase
 import com.mustafaderinoz.core.domain.purchase.PurchaseRepository
-import com.mustafaderinoz.data.network.ApiException
-import com.mustafaderinoz.data.network.NetworkException
+import com.mustafaderinoz.core.util.ErrorContext
+import com.mustafaderinoz.core.util.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,11 +59,13 @@ class PurchaseViewModel(
                     }
                 }
                 .onFailure { error ->
-                    val isCapacityExceeded = error is ApiException && error.code == 409
+                    val isCapacityExceeded = error is AppError.Api && error.code == 409
+                    val message = (error as? AppError)?.toUserMessage(ErrorContext.PURCHASE_CREATE)
+                        ?: AppError.Unknown(error.message).toUserMessage()
                     _state.update {
                         it.copy(
                             isCreatingPurchase = false,
-                            error = error.toPurchaseCreateMessage(),
+                            error = message,
                             shouldRefreshEvent = isCapacityExceeded
                         )
                     }
@@ -88,10 +91,13 @@ class PurchaseViewModel(
                     }
                 }
                 .onFailure { error ->
+                    val message = (error as? AppError)?.toUserMessage(ErrorContext.PAY)
+                        ?: AppError.Unknown(error.message).toUserMessage()
+
                     _state.update {
                         it.copy(
                             isPaying = false,
-                            error = error.toPayMessage()
+                            error = message
                         )
                     }
                 }
@@ -115,28 +121,3 @@ class PurchaseViewModel(
     }
 }
 
-// ── API'ye Uygun Hata Çeviriciler ─────────────────────────────────────────────
-
-internal fun Throwable.toPurchaseCreateMessage(): String = when (this) {
-    is ApiException -> when (code) {
-        400 -> "Geçersiz bilet adedi veya veri formatı."
-        404 -> "Seçilen bilet türü bulunamadı."
-        409 -> "Kapasite aşıldı, lütfen sayfayı yenileyip stokları kontrol edin."
-        in 500..599 -> "Sunucu şu anda cevap veremiyor."
-        else -> "Beklenmeyen bir hata oluştu."
-    }
-    is NetworkException -> "İnternet bağlantısı yok."
-    else -> message ?: "Bilinmeyen bir hata oluştu."
-}
-
-internal fun Throwable.toPayMessage(): String = when (this) {
-    is ApiException -> when (code) {
-        403 -> "Bu satın alım işlemini onaylama yetkiniz yok."
-        404 -> "Satın alım kaydı bulunamadı."
-        409 -> "Bu bilet zaten ödenmiş veya stok tükenmiş."
-        in 500..599 -> "Sunucu şu anda cevap veremiyor."
-        else -> "Beklenmeyen bir hata oluştu."
-    }
-    is NetworkException -> "İnternet bağlantısı yok."
-    else -> message ?: "Bilinmeyen bir hata oluştu."
-}

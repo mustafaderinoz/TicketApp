@@ -3,12 +3,13 @@ package com.mustafaderinoz.ticketapp.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mustafaderinoz.core.domain.auth.AuthRepository
+import com.mustafaderinoz.core.domain.error.AppError
 import com.mustafaderinoz.core.domain.event.Event
 import com.mustafaderinoz.core.domain.event.EventRepository
 import com.mustafaderinoz.core.domain.ticket.TicketUi
 import com.mustafaderinoz.core.domain.ticket.TicketRepository
-import com.mustafaderinoz.data.network.ApiException
-import com.mustafaderinoz.data.network.NetworkException
+import com.mustafaderinoz.core.util.ErrorContext
+import com.mustafaderinoz.core.util.toUserMessage
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -71,7 +72,10 @@ class HomeViewModel(
             // Etkinliklerin Sonucunu İşle
             eventsResult
                 .onSuccess { fetchedEvents = it }
-                .onFailure { newEventsError = it.toHomeMessage() }
+                .onFailure { error ->
+                    newEventsError = (error as? AppError)?.toUserMessage(ErrorContext.HOME)
+                        ?: AppError.Unknown(error.message).toUserMessage()
+                }
 
             // Biletlerin Sonucunu İşle ve Zenginleştir (Enrich)
             ticketsResult
@@ -94,8 +98,10 @@ class HomeViewModel(
                         )
                     }
                 }
-                .onFailure { newTicketsError = it.toHomeMessage() }
-
+                .onFailure { error ->
+                    newTicketsError = (error as? AppError)?.toUserMessage(ErrorContext.HOME)
+                        ?: AppError.Unknown(error.message).toUserMessage()
+                }
             // Tek Seferde Tüm State'i Güncelle
             _state.update {
                 it.copy(
@@ -118,11 +124,4 @@ class HomeViewModel(
     }
 }
 
-internal fun Throwable.toHomeMessage(): String = when (this) {
-    is ApiException -> when (code) {
-        in 500..599 -> "Sunucu şu anda cevap veremiyor"
-        else -> "Beklenmeyen bir hata oluştu"
-    }
-    is NetworkException -> "İnternet bağlantısı yok"
-    else -> message ?: "Bilinmeyen bir hata oluştu."
-}
+

@@ -3,11 +3,12 @@ package com.mustafaderinoz.ticketapp.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mustafaderinoz.core.domain.error.AppError
 import com.mustafaderinoz.core.domain.event.EventRepository
 import com.mustafaderinoz.core.domain.ticket.TicketUi
 import com.mustafaderinoz.core.domain.ticket.TicketRepository
-import com.mustafaderinoz.data.network.ApiException
-import com.mustafaderinoz.data.network.NetworkException
+import com.mustafaderinoz.core.util.ErrorContext
+import com.mustafaderinoz.core.util.toUserMessage
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -76,11 +77,13 @@ class TicketDetailViewModel(
                             )
                         }
                         .onFailure { error ->
-                            detailError = error.toTicketDetailMessage()
+                            detailError = (error as? AppError)?.toUserMessage(ErrorContext.TICKET_DETAIL)
+                                ?: AppError.Unknown(error.message).toUserMessage()
                         }
                 }
                 .onFailure { error ->
-                    detailError = error.toTicketDetailMessage()
+                    detailError = (error as? AppError)?.toUserMessage(ErrorContext.TICKET_DETAIL)
+                        ?: AppError.Unknown(error.message).toUserMessage()
                 }
 
             // Tüm işlemler bittikten sonra tek bir güncelleme
@@ -95,12 +98,4 @@ class TicketDetailViewModel(
     }
 }
 
-// Bilet Detay sayfasına özel (404 içermeyen) hata yakalayıcı
-internal fun Throwable.toTicketDetailMessage(): String = when (this) {
-    is ApiException -> when (code) {
-        in 500..599 -> "Sunucu şu anda cevap veremiyor"
-        else -> "Beklenmeyen bir hata oluştu"
-    }
-    is NetworkException -> "İnternet bağlantısı yok"
-    else -> message ?: "Bilinmeyen bir hata oluştu."
-}
+

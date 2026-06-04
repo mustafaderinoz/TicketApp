@@ -1,5 +1,6 @@
 package com.mustafaderinoz.data.util
 
+import com.mustafaderinoz.data.mapper.toAppError
 import com.mustafaderinoz.data.network.ApiException
 import com.mustafaderinoz.data.network.NetworkException
 import retrofit2.HttpException
@@ -9,11 +10,11 @@ suspend inline fun <T> runCatchingApi(crossinline block: suspend () -> T): Resul
     Result.success(block())
 } catch(e: HttpException)
 {
-    Result.failure(ApiException(code = e.code(), errorMessage = e.message(), cause=e))
+    Result.failure(ApiException(code = e.code(), errorMessage = e.message(), cause=e).toAppError())
 } catch(e: IOException)
 {
-    Result.failure(NetworkException(e))
+    Result.failure(NetworkException(e).toAppError())
 } catch(e: Exception)
 {
-    Result.failure(e)
+    Result.failure(e.toAppError())
 }
