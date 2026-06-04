@@ -19,6 +19,8 @@ dataStore = "1.1.1"
 navigationCompose = "2.8.0"
 lifecycleViewModelCompose = "2.8.7"
 
+qrCodeKotlin = "3.3.0"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +52,7 @@ okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-i
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStore" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewModelCompose" }
+qrcode-kotlin = {group="io.github.g0dkar", name="qrcode-kotlin",version.ref= "qrCodeKotlin"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

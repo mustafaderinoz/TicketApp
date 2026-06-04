@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mustafaderinoz.core.domain.ticket.TicketUi
 import com.mustafaderinoz.core.util.DateTimeUtils
 import com.mustafaderinoz.core.util.TicketUtils
+import com.mustafaderinoz.ticketapp.component.QrCodeImage
 import com.mustafaderinoz.ticketapp.viewmodel.TicketDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -200,42 +201,14 @@ private fun TicketDetailContent(
                     )
                 }
 
-                // QR Kod Kutusu (Metin)
-                Box(
+                // QR Kod
+                QrCodeImage(
+                    content = ticket.qrCode,
                     modifier = Modifier
                         .size(200.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.CheckCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                        Text(
-                            text = ticket.qrCode,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            textAlign = TextAlign.Center,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                Text(
-                    text = "Girişte bu QR kodu okutun",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
             }
         }
 

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mustafaderinoz.core.domain.event.Event
 import com.mustafaderinoz.core.domain.event.TicketType
+import com.mustafaderinoz.core.domain.purchase.Purchase
 import com.mustafaderinoz.core.util.DateTimeUtils
 import com.mustafaderinoz.core.util.TicketUtils
 import com.mustafaderinoz.ticketapp.viewmodel.EventDetailViewModel
@@ -148,7 +149,7 @@ fun EventDetailScreen(
 
 @Composable
 private fun PurchaseConfirmationDialog(
-    purchase: com.mustafaderinoz.core.domain.purchase.Purchase,
+    purchase:Purchase,
     ticketTypes: List<TicketType>,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
@@ -157,7 +158,23 @@ private fun PurchaseConfirmationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Ödeme Onayı", fontWeight = FontWeight.Bold) },
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Ödeme Onayı", fontWeight = FontWeight.Bold)
+
+
+                Text(
+                    text = purchase.status.toString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 purchase.items.forEach { item ->
