@@ -17,6 +17,8 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mustafaderinoz.core.domain.event.Event
-import com.mustafaderinoz.core.domain.ticket.PurchasedTicketUi
+import com.mustafaderinoz.core.domain.ticket.TicketUi
 import com.mustafaderinoz.core.util.DateTimeUtils
 import com.mustafaderinoz.core.util.TicketUtils
 import com.mustafaderinoz.ticketapp.viewmodel.HomeViewModel
@@ -44,6 +46,9 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val isRefreshing = state.isRefreshing
+    val pullToRefreshState = rememberPullToRefreshState()
+
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -71,33 +76,40 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.loadData(isRefresh = true) },
+            state = pullToRefreshState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = 24.dp)
+                .padding(paddingValues),
         ) {
-            SectionHeader(title = "Yaklaşan Etkinlikler")
-            Spacer(Modifier.height(16.dp))
-            EventsRow(
-                isLoading = state.isEventsLoading,
-                error = state.eventsError,
-                events = state.events,
-                onEventClick = onNavigateToEventDetail
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 24.dp)
+            ) {
+                SectionHeader(title = "Yaklaşan Etkinlikler")
+                Spacer(Modifier.height(16.dp))
+                EventsRow(
+                    isLoading = state.isEventsLoading,
+                    error = state.eventsError,
+                    events = state.events,
+                    onEventClick = onNavigateToEventDetail
+                )
 
-            Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(32.dp))
 
-            SectionHeader(title = "Satın Alınmış Biletler")
-            Spacer(Modifier.height(16.dp))
-            TicketsColumn(
-                isLoading = state.isTicketsLoading,
-                error = state.ticketsError,
-                tickets = state.tickets,
-                onTicketClick = onNavigateToTicketDetail
-            )
-
+                SectionHeader(title = "Satın Alınmış Biletler")
+                Spacer(Modifier.height(16.dp))
+                TicketsColumn(
+                    isLoading = state.isTicketsLoading,
+                    error = state.ticketsError,
+                    tickets = state.tickets,
+                    onTicketClick = onNavigateToTicketDetail
+                )
+            }
         }
     }
 }
@@ -336,7 +348,7 @@ private fun DateBadge(icon: ImageVector, label: String) {
 private fun TicketsColumn(
     isLoading: Boolean,
     error: String?,
-    tickets: List<PurchasedTicketUi>,
+    tickets: List<TicketUi>,
     onTicketClick: (String) -> Unit,
 ) {
     when {
@@ -376,7 +388,7 @@ private fun TicketsColumn(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun PurchasedTicketCard(
-    ticket: PurchasedTicketUi,
+    ticket: TicketUi,
     onClick: () -> Unit,
 ) {
     val isValid = ticket.status == "VALID"

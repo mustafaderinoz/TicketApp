@@ -35,45 +35,29 @@ class EventDetailViewModel(
         loadEvent()
     }
 
-    fun loadEvent() {
+    fun loadEvent(isRefresh: Boolean = false) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-
-            eventRepository.getEvent(eventId)
-                .onSuccess { event ->
-                    val initialQuantities = event.ticketTypes.associate { it.id to 0 }
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            event = event,
-                            quantities = initialQuantities
-                        )
-                    }
-                }
-                .onFailure { error ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = error.toEventDetailMessage()
-                        )
-                    }
-                }
-        }
-    }
-
-    fun refresh() {
-        viewModelScope.launch {
-            _state.update { it.copy(isRefreshing = true, error = null) }
+            if (isRefresh) {
+                _state.update { it.copy(isRefreshing = true, error = null) }
+            } else {
+                _state.update { it.copy(isLoading = true, error = null) }
+            }
 
             eventRepository.getEvent(eventId)
                 .onSuccess { event ->
                     val currentQuantities = _state.value.quantities
-                    val mergedQuantities = event.ticketTypes.associate { ticketType ->
-                        val existing = currentQuantities[ticketType.id] ?: 0
-                        ticketType.id to minOf(existing.toLong(), ticketType.remaining).toInt()
+                    val mergedQuantities = if (isRefresh) {
+                        event.ticketTypes.associate { ticketType ->
+                            val existing = currentQuantities[ticketType.id] ?: 0
+                            ticketType.id to minOf(existing.toLong(), ticketType.remaining).toInt()
+                        }
+                    } else {
+                        event.ticketTypes.associate { it.id to 0 }
                     }
+
                     _state.update {
                         it.copy(
+                            isLoading = false,
                             isRefreshing = false,
                             event = event,
                             quantities = mergedQuantities
@@ -83,6 +67,7 @@ class EventDetailViewModel(
                 .onFailure { error ->
                     _state.update {
                         it.copy(
+                            isLoading = false,
                             isRefreshing = false,
                             error = error.toEventDetailMessage()
                         )
@@ -90,6 +75,7 @@ class EventDetailViewModel(
                 }
         }
     }
+
 
     fun increment(ticketTypeId: String) {
         val event = _state.value.event ?: return

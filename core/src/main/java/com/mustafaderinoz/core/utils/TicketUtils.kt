@@ -19,4 +19,15 @@ object TicketUtils {
     }
     fun calculateTotal(ticketTypes: List<TicketType>, quantities: Map<String, Int>): Long =
         ticketTypes.sumOf { tt -> tt.priceCents * (quantities[tt.id] ?: 0) }
+
+    /**
+     * Biletleri önce tükenmeyenler (stoku olanlar) üstte olacak şekilde,
+     * ardından kendi içlerinde ucuzdan pahalıya doğru sıralar.
+     */
+    fun sortTickets(ticketTypes: List<TicketType>): List<TicketType> {
+        return ticketTypes.sortedWith(
+            compareByDescending<TicketType> { it.remaining > 0 }
+                .thenBy { it.priceCents }
+        )
+    }
 }

@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mustafaderinoz.core.domain.event.EventRepository
-import com.mustafaderinoz.core.domain.ticket.PurchasedTicketUi
+import com.mustafaderinoz.core.domain.ticket.TicketUi
 import com.mustafaderinoz.core.domain.ticket.TicketRepository
 import com.mustafaderinoz.data.network.ApiException
 import com.mustafaderinoz.data.network.NetworkException
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 
 data class TicketDetailUiState(
     val isLoading: Boolean = false,
-    val ticket: PurchasedTicketUi? = null,
+    val ticket: TicketUi? = null,
     val error: String? = null,
 )
 
@@ -46,7 +46,7 @@ class TicketDetailViewModel(
             val eventsResult = eventsDeferred.await()
 
             // State'e aktarılacak geçici değişkenler
-            var enrichedTicket: PurchasedTicketUi? = null
+            var enrichedTicket: TicketUi? = null
             var detailError: String? = null
 
             // Önce biletin başarılı olup olmadığına bakıyoruz
@@ -57,7 +57,6 @@ class TicketDetailViewModel(
                         .onSuccess { events ->
                             //index[0]-> Event(id=, name=Etkinlik Deneme, description=Etkinlik, venue=, startsAt=, endsAt=,
                             //   ticketTypes=[TicketType(id=fb, name=Bilet 1, priceCents=69999, capacity=100, soldCount=6, remaining=94), //   TicketType().......],
-
                             // map yapmasaydık eğer etkinliklere bakıp içerdeki biletleri tek tek gezip id uyuyormu diye bakardık
                             val ticketTypeToEventMap = events
                                 .flatMap { event -> event.ticketTypes.map { it.id to event } } //it.id to event, bilet id si key ,event ise value yapar
@@ -70,7 +69,7 @@ class TicketDetailViewModel(
                             //Key (TicketTypeId): 39284f66-f672-4385-8a0e-93b926ae04d9
                             //Value: TicketType(id=39284f66-f672-4385-8a0e-93b926ae04d9, name=Bilet 2, priceCents=89999, capacity=100, soldCount=10, remaining=90)
 
-                            enrichedTicket = PurchasedTicketUi(
+                            enrichedTicket = TicketUi(
                                 ticket = ticket,
                                 event = ticketTypeToEventMap[ticket.ticketTypeId],
                                 ticketType = ticketTypeMap[ticket.ticketTypeId],

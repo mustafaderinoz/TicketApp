@@ -72,7 +72,12 @@ private fun AuthedNavHost(navController: NavHostController) {
         }
         composable<EventDetail> {
             EventDetailScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHome = {
+                    navController.navigate(Home) {
+                        popUpTo(Home) { inclusive = false }
+                    }
+                }
             )
         }
     }

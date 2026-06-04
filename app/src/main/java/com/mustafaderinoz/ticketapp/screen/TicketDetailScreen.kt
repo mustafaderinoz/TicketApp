@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mustafaderinoz.core.domain.ticket.PurchasedTicketUi
+import com.mustafaderinoz.core.domain.ticket.TicketUi
 import com.mustafaderinoz.core.util.DateTimeUtils
 import com.mustafaderinoz.core.util.TicketUtils
 import com.mustafaderinoz.ticketapp.viewmodel.TicketDetailViewModel
@@ -157,7 +157,7 @@ private fun EmptyStateContent() {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun TicketDetailContent(
-    ticket: PurchasedTicketUi,
+    ticket: TicketUi,
     modifier: Modifier = Modifier,
 ) {
     val isValid = ticket.status == "VALID"

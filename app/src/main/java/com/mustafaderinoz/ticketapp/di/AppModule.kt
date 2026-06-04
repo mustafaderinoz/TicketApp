@@ -5,6 +5,7 @@ import com.mustafaderinoz.ticketapp.viewmodel.RegisterViewModel
 import com.mustafaderinoz.ticketapp.viewmodel.HomeViewModel
 import com.mustafaderinoz.ticketapp.viewmodel.TicketDetailViewModel
 import com.mustafaderinoz.ticketapp.viewmodel.EventDetailViewModel
+import com.mustafaderinoz.ticketapp.viewmodel.PurchaseViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -14,4 +15,5 @@ val appModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::TicketDetailViewModel)
     viewModelOf(::EventDetailViewModel)
+    viewModelOf(::PurchaseViewModel)
 }

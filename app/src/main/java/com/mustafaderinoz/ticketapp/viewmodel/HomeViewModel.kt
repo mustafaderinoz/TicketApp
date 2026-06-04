@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mustafaderinoz.core.domain.auth.AuthRepository
 import com.mustafaderinoz.core.domain.event.Event
 import com.mustafaderinoz.core.domain.event.EventRepository
-import com.mustafaderinoz.core.domain.ticket.PurchasedTicketUi
+import com.mustafaderinoz.core.domain.ticket.TicketUi
 import com.mustafaderinoz.core.domain.ticket.TicketRepository
 import com.mustafaderinoz.data.network.ApiException
 import com.mustafaderinoz.data.network.NetworkException
@@ -22,8 +22,10 @@ data class HomeUiState(
     val eventsError: String? = null,
 
     val isTicketsLoading: Boolean = false,
-    val tickets: List<PurchasedTicketUi> = emptyList(),
+    val tickets: List<TicketUi> = emptyList(),
     val ticketsError: String? = null,
+
+    val isRefreshing: Boolean = false
 )
 
 class HomeViewModel(
@@ -39,12 +41,13 @@ class HomeViewModel(
         loadData()
     }
 
-    fun loadData() {
+    fun loadData(isRefresh: Boolean = false) {
         viewModelScope.launch {
             _state.update {
                 it.copy(
-                    isEventsLoading = true,
-                    isTicketsLoading = true,
+                    isEventsLoading = !isRefresh,
+                    isTicketsLoading = !isRefresh,
+                    isRefreshing =isRefresh,
                     eventsError = null,
                     ticketsError = null
                 )
@@ -62,7 +65,7 @@ class HomeViewModel(
             var fetchedEvents: List<Event> = emptyList()
             var newEventsError: String? = null
 
-            var enrichedTickets: List<PurchasedTicketUi> = emptyList()
+            var enrichedTickets: List<TicketUi> = emptyList()
             var newTicketsError: String? = null
 
             // Etkinliklerin Sonucunu İşle
@@ -84,7 +87,7 @@ class HomeViewModel(
 
                     //  UI modeline çevirme
                     enrichedTickets = rawTickets.map { ticket ->
-                        PurchasedTicketUi(
+                        TicketUi(
                             ticket = ticket,
                             event = ticketTypeToEventMap[ticket.ticketTypeId],
                             ticketType = ticketTypeMap[ticket.ticketTypeId],
@@ -102,7 +105,8 @@ class HomeViewModel(
 
                     isTicketsLoading = false,
                     tickets = enrichedTickets,
-                    ticketsError = newTicketsError
+                    ticketsError = newTicketsError,
+                    isRefreshing = false
                 )
             }
         }

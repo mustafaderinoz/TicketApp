@@ -3,8 +3,8 @@ package com.mustafaderinoz.core.domain.ticket
 import com.mustafaderinoz.core.domain.event.Event
 import com.mustafaderinoz.core.domain.event.TicketType
 
-data class PurchasedTicketUi(
-    val ticket: PurchasedTicket,
+data class TicketUi(
+    val ticket: Ticket,
     val event: Event?,
     val ticketType: TicketType?,
 ) {
@@ -15,5 +15,5 @@ data class PurchasedTicketUi(
     val ticketTypePriceCents: Long get() = ticketType?.priceCents ?: 0L
     val id: String get() = ticket.id
     val qrCode: String get() = ticket.qrCode
-    val status: String get() = ticket.status
+    val status: String get() = ticket.status.name
 }
