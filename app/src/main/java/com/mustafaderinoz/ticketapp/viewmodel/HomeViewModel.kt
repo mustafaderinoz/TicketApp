@@ -43,6 +43,7 @@ class HomeViewModel(
     }
 
     fun loadData(isRefresh: Boolean = false) {
+        if (_state.value.isEventsLoading || _state.value.isRefreshing) return
         viewModelScope.launch {
             _state.update {
                 it.copy(

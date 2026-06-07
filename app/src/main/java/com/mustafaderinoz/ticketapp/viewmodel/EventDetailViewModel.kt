@@ -37,11 +37,16 @@ class EventDetailViewModel(
     }
 
     fun loadEvent(isRefresh: Boolean = false) {
+        if (_state.value.isLoading || _state.value.isRefreshing) return
+
         viewModelScope.launch {
-            if (isRefresh) {
-                _state.update { it.copy(isRefreshing = true, error = null) }
-            } else {
-                _state.update { it.copy(isLoading = true, error = null) }
+
+            _state.update {
+                if (isRefresh) {
+                    it.copy(isRefreshing = true, error = null)
+                } else {
+                    it.copy(isLoading = true, error = null)
+                }
             }
 
             eventRepository.getEvent(eventId)
