@@ -3,7 +3,6 @@ package com.mustafaderinoz.ticketapp.screen
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -25,10 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mustafaderinoz.core.domain.ticket.TicketUi
+import com.mustafaderinoz.core.domain.ticket.Ticket
+import com.mustafaderinoz.core.domain.ticket.TicketStatus
 import com.mustafaderinoz.core.util.DateTimeUtils
 import com.mustafaderinoz.core.util.TicketUtils
 import com.mustafaderinoz.ticketapp.component.QrCodeImage
@@ -43,17 +42,11 @@ fun TicketDetailScreen(
     viewModel: TicketDetailViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val ticket = state.ticket
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = "Bilet Detayı",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
+                title = { Text(text = "Bilet Detayı", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -69,7 +62,6 @@ fun TicketDetailScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -77,32 +69,19 @@ fun TicketDetailScreen(
             contentAlignment = Alignment.Center
         ) {
             when {
-                // 1. Loading State
-                state.isLoading -> {
-                    CircularProgressIndicator()
-                }
+                state.isLoading -> CircularProgressIndicator()
 
-                // 2. Error State
-                state.error != null -> {
-                    ErrorStateContent(
-                        errorMessage = state.error!!,
-                        onRetry = { viewModel.loadTicketDetail() }
-                    )
-                }
+                state.error != null -> ErrorStateContent(
+                    errorMessage = state.error!!,
+                    onRetry = { viewModel.loadTicketDetail() }
+                )
 
-                // 3. Content State
-                ticket != null -> {
-                    TicketDetailContent(
-                        ticket = ticket,
+                state.ticket != null -> TicketDetailContent(
+                    ticket = state.ticket!!,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
 
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    )
-                }
-
-                // 4. Empty State
-                else -> {
-                    EmptyStateContent()
-                }
+                else -> EmptyStateContent()
             }
         }
     }
@@ -127,9 +106,7 @@ private fun ErrorStateContent(errorMessage: String, onRetry: () -> Unit) {
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center
         )
-        Button(onClick = onRetry) {
-            Text("Tekrar Dene")
-        }
+        Button(onClick = onRetry) { Text("Tekrar Dene") }
     }
 }
 
@@ -158,12 +135,14 @@ private fun EmptyStateContent() {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun TicketDetailContent(
-    ticket: TicketUi,
+    ticket: Ticket,
     modifier: Modifier = Modifier,
 ) {
-    val isValid = ticket.status == "VALID"
-    val badgeContainerColor = if (isValid) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
-    val badgeContentColor = if (isValid) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
+    val isValid = ticket.status == TicketStatus.VALID
+    val badgeContainerColor = if (isValid) MaterialTheme.colorScheme.primaryContainer
+    else MaterialTheme.colorScheme.errorContainer
+    val badgeContentColor = if (isValid) MaterialTheme.colorScheme.onPrimaryContainer
+    else MaterialTheme.colorScheme.onErrorContainer
 
     Column(
         modifier = modifier
@@ -172,7 +151,6 @@ private fun TicketDetailContent(
             .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // ── QR Kod Alanı ──────────────────────────────────────────────────────────
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -187,13 +165,9 @@ private fun TicketDetailContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Durum Badge
-                Surface(
-                    shape = CircleShape,
-                    color = badgeContainerColor
-                ) {
+                Surface(shape = CircleShape, color = badgeContainerColor) {
                     Text(
-                        text = ticket.status,
+                        text = ticket.status.name,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = badgeContentColor,
@@ -201,22 +175,18 @@ private fun TicketDetailContent(
                     )
                 }
 
-                // QR Kod
                 QrCodeImage(
                     content = ticket.qrCode,
                     modifier = Modifier
                         .size(200.dp)
                         .clip(RoundedCornerShape(16.dp))
                 )
-
             }
         }
 
-        // ── Etkinlik Bilgileri Kartı ──────────────────────────────────────────────
         DetailCard(title = "Etkinlik Bilgileri") {
             DetailRow(icon = Icons.Outlined.CheckCircle, label = "Etkinlik", value = ticket.eventName)
             DetailRow(icon = Icons.Outlined.LocationOn, label = "Mekan", value = ticket.eventVenue)
-
             if (ticket.eventStartsAt.isNotBlank()) {
                 DetailRow(
                     icon = Icons.Outlined.DateRange,
@@ -231,10 +201,8 @@ private fun TicketDetailContent(
             }
         }
 
-        // ── Bilet Bilgileri Kartı ────────────────────────────────────────────────
         DetailCard(title = "Bilet Bilgileri") {
             DetailRow(icon = Icons.Outlined.CheckCircle, label = "Bilet Türü", value = ticket.ticketTypeName)
-
             if (ticket.ticketTypePriceCents > 0L) {
                 DetailRow(
                     icon = Icons.Outlined.CheckCircle,
@@ -247,8 +215,6 @@ private fun TicketDetailContent(
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
-
-// ── Yardımcı UI Bileşenleri ──────────────────────────────────────────────────
 
 @Composable
 private fun DetailCard(
@@ -272,16 +238,8 @@ private fun DetailCard(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
-
-            HorizontalDivider(
-                thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                content = content
-            )
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp), content = content)
         }
     }
 }
@@ -307,7 +265,6 @@ private fun DetailRow(icon: ImageVector, label: String, value: String) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = label,

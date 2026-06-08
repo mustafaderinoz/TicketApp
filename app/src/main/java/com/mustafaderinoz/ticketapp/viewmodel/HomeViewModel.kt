@@ -6,7 +6,7 @@ import com.mustafaderinoz.core.domain.auth.AuthRepository
 import com.mustafaderinoz.core.domain.error.AppError
 import com.mustafaderinoz.core.domain.event.Event
 import com.mustafaderinoz.core.domain.event.EventRepository
-import com.mustafaderinoz.core.domain.ticket.TicketUi
+import com.mustafaderinoz.core.domain.ticket.Ticket
 import com.mustafaderinoz.core.domain.ticket.TicketRepository
 import com.mustafaderinoz.core.util.ErrorContext
 import com.mustafaderinoz.core.util.toUserMessage
@@ -23,7 +23,7 @@ data class HomeUiState(
     val eventsError: String? = null,
 
     val isTicketsLoading: Boolean = false,
-    val tickets: List<TicketUi> = emptyList(),
+    val tickets: List<Ticket> = emptyList(),
     val ticketsError: String? = null,
 
     val isRefreshing: Boolean = false
@@ -38,9 +38,7 @@ class HomeViewModel(
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
-    init {
-        loadData()
-    }
+    init { loadData() }
 
     fun loadData(isRefresh: Boolean = false) {
         if (_state.value.isEventsLoading || _state.value.isRefreshing) return
@@ -49,28 +47,23 @@ class HomeViewModel(
                 it.copy(
                     isEventsLoading = !isRefresh,
                     isTicketsLoading = !isRefresh,
-                    isRefreshing =isRefresh,
+                    isRefreshing = isRefresh,
                     eventsError = null,
                     ticketsError = null
                 )
             }
 
-
             val eventsDeferred = async { eventRepository.getEvents() }
             val ticketsDeferred = async { ticketRepository.getPurchasedTickets() }
-
 
             val eventsResult = eventsDeferred.await()
             val ticketsResult = ticketsDeferred.await()
 
-            // State'e aktarılacak geçici değişkenler
             var fetchedEvents: List<Event> = emptyList()
             var newEventsError: String? = null
-
-            var enrichedTickets: List<TicketUi> = emptyList()
+            var fetchedTickets: List<Ticket> = emptyList()
             var newTicketsError: String? = null
 
-            // Etkinliklerin Sonucunu İşle
             eventsResult
                 .onSuccess { fetchedEvents = it }
                 .onFailure { error ->
@@ -78,51 +71,29 @@ class HomeViewModel(
                         ?: AppError.Unknown(error.message).toUserMessage()
                 }
 
-            // Biletlerin Sonucunu İşle ve Zenginleştir (Enrich)
             ticketsResult
-                .onSuccess { rawTickets ->
-                    // Etkinlikler başarıyla yüklendiyse (veya boşsa) map'leri oluştur
-                    val ticketTypeToEventMap = fetchedEvents
-                        .flatMap { event -> event.ticketTypes.map { it.id to event } }
-                        .toMap()
-
-                    val ticketTypeMap = fetchedEvents
-                        .flatMap { it.ticketTypes }
-                        .associateBy { it.id }
-
-                    //  UI modeline çevirme
-                    enrichedTickets = rawTickets.map { ticket ->
-                        TicketUi(
-                            ticket = ticket,
-                            event = ticketTypeToEventMap[ticket.ticketTypeId],
-                            ticketType = ticketTypeMap[ticket.ticketTypeId],
-                        )
-                    }
-                }
+                .onSuccess { fetchedTickets = it }
                 .onFailure { error ->
                     newTicketsError = (error as? AppError)?.toUserMessage(ErrorContext.HOME)
                         ?: AppError.Unknown(error.message).toUserMessage()
                 }
-            // Tek Seferde Tüm State'i Güncelle
+
             _state.update {
                 it.copy(
                     isEventsLoading = false,
                     events = fetchedEvents,
                     eventsError = newEventsError,
-
                     isTicketsLoading = false,
-                    tickets = enrichedTickets,
+                    tickets = fetchedTickets,
                     ticketsError = newTicketsError,
                     isRefreshing = false
                 )
             }
         }
     }
+
     fun logout() {
-        viewModelScope.launch {
-            authRepository.logout()
-        }
+        viewModelScope.launch { authRepository.logout() }
     }
 }
-
 

@@ -83,4 +83,6 @@ dependencies {
 
     implementation(libs.qrcode.kotlin)
 
+    implementation(libs.zxing.android.embedded)
+
 }

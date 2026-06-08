@@ -5,4 +5,10 @@ data class Ticket(
     val qrCode: String,
     val status: TicketStatus,
     val ticketTypeId: String,
+    val ticketTypeName: String,
+    val ticketTypePriceCents: Long,
+    val eventId: String,
+    val eventName: String,
+    val eventVenue: String,
+    val eventStartsAt: String,
 )
