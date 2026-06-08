@@ -1,6 +1,7 @@
 package com.mustafaderinoz.data.di
 
 import com.mustafaderinoz.core.domain.auth.AuthRepository
+import com.mustafaderinoz.core.domain.checkin.CheckInRepository
 import com.mustafaderinoz.core.domain.event.EventRepository
 import com.mustafaderinoz.core.domain.purchase.PurchaseRepository
 import com.mustafaderinoz.core.domain.ticket.TicketRepository
@@ -8,10 +9,12 @@ import com.mustafaderinoz.data.local.TokenStore
 import com.mustafaderinoz.data.network.AuthInterceptor
 import com.mustafaderinoz.data.network.TokenAuthenticator
 import com.mustafaderinoz.data.remote.AuthApi
+import com.mustafaderinoz.data.remote.CheckInApi
 import com.mustafaderinoz.data.remote.EventApi
 import com.mustafaderinoz.data.remote.PurchaseApi
 import com.mustafaderinoz.data.remote.TicketApi
 import com.mustafaderinoz.data.repository.AuthRepositoryImpl
+import com.mustafaderinoz.data.repository.CheckInRepositoryImpl
 import com.mustafaderinoz.data.repository.EventRepositoryImpl
 import com.mustafaderinoz.data.repository.PurchaseRepositoryImpl
 import com.mustafaderinoz.data.repository.TicketRepositoryImpl
@@ -112,6 +115,10 @@ val dataModule = module {
         get<Retrofit>().create(PurchaseApi::class.java)
     }
 
+    single { get<Retrofit>().create(CheckInApi::class.java) }
+
+
+
 
     single<AuthRepository> {
         AuthRepositoryImpl(
@@ -129,6 +136,10 @@ val dataModule = module {
     }
     single<PurchaseRepository> {
         PurchaseRepositoryImpl(purchaseApi = get())
+    }
+
+    single<CheckInRepository> {
+        CheckInRepositoryImpl(checkInApi = get())
     }
 
 

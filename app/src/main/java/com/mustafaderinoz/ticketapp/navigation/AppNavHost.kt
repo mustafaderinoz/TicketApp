@@ -15,10 +15,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mustafaderinoz.core.domain.auth.AuthRepository
+import com.mustafaderinoz.core.domain.auth.UserRole
 import com.mustafaderinoz.ticketapp.screen.EventDetailScreen
 import com.mustafaderinoz.ticketapp.screen.HomeScreen
 import com.mustafaderinoz.ticketapp.screen.LoginScreen
 import com.mustafaderinoz.ticketapp.screen.RegisterScreen
+import com.mustafaderinoz.ticketapp.screen.StaffScreen
 import com.mustafaderinoz.ticketapp.screen.TicketDetailScreen
 import org.koin.compose.koinInject
 
@@ -26,6 +28,7 @@ import org.koin.compose.koinInject
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavHost(
     navController: NavHostController = rememberNavController(),
@@ -34,11 +37,19 @@ fun AppNavHost(
 
 {
     val isLoggedIn by authRepository.isLoggedIn.collectAsStateWithLifecycle(initialValue = null)
+    val userRole by authRepository.userRole.collectAsStateWithLifecycle(initialValue = null)
 
     when(isLoggedIn)
     {
         null -> SplashScreen()
-        true -> AuthedNavHost(navController)
+        true -> {
+            when (userRole) {
+                null -> SplashScreen()
+                UserRole.STAFF-> StaffNavHost(navController)
+                UserRole.ADMIN->AdminNavHost(navController)
+                else -> AuthedNavHost(navController)
+            }
+        }
         false -> UnAuthedNavHost(navController)
     }
 
@@ -103,4 +114,24 @@ private fun UnAuthedNavHost(navController: NavHostController){
         }
     }
 
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun StaffNavHost(navController: NavHostController) {
+    NavHost(navController = navController, startDestination = Staff) {
+        composable<Staff> {
+            StaffScreen() // Parametre kaldırıldı
+        }
+    }
+}
+
+
+@Composable
+private fun AdminNavHost(navController: NavHostController) {
+    NavHost(navController = navController, startDestination = Admin) {
+        composable<Admin> {
+            //TODO: ADMIN
+        }
+    }
 }

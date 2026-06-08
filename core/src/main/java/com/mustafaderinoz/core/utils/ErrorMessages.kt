@@ -4,7 +4,7 @@ import com.mustafaderinoz.core.domain.error.AppError
 
 enum class ErrorContext {
     GENERIC, LOGIN, REGISTER,HOME, EVENT_DETAIL,
-    PURCHASE_CREATE, PAY, TICKET_DETAIL
+    PURCHASE_CREATE, PAY, TICKET_DETAIL,SCAN
 }
 
 fun AppError.toUserMessage(context: ErrorContext = ErrorContext.GENERIC): String = when (this) {
@@ -26,6 +26,9 @@ private fun resolveApiMessage(code: Int, context: ErrorContext): String = when {
     context == ErrorContext.PAY              && code == 403 -> "Bu satın alım işlemini onaylama yetkiniz yok."
     context == ErrorContext.PAY              && code == 404 -> "Satın alım kaydı bulunamadı."
     context == ErrorContext.PAY              && code == 409 -> "Bu bilet zaten ödenmiş veya stok tükenmiş."
+    context == ErrorContext.SCAN && code == 404 -> "Bilet bulunamadı veya geçersiz QR kod."
+    context == ErrorContext.SCAN && code == 403 -> "Bu etkinliğe atanmadığınız için işlem yapamazsınız."
+    context == ErrorContext.SCAN && code == 409 -> "Bu bilet daha önce kullanılmış."
 
     else -> "Beklenmeyen bir hata oluştu"
 }
